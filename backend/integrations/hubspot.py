@@ -1,6 +1,7 @@
 # hubspot.py
 
 import json
+import os
 import secrets
 from fastapi import Request, HTTPException
 from fastapi.responses import HTMLResponse
@@ -9,10 +10,10 @@ import asyncio
 import base64
 
 from redis_client import add_key_value_redis, get_value_redis, delete_key_redis
-from integration_item import IntegrationItem
+from integrations.integration_item import IntegrationItem
 
-CLIENT_ID = 'b84ae56b-bd25-42ab-971b-9e7278c364e0'
-CLIENT_SECRET = '435333eb-c9e3-427e-b625-de0c33102a2a'
+CLIENT_ID = os.environ.get('HUBSPOT_CLIENT_ID')
+CLIENT_SECRET = os.environ.get('HUBSPOT_CLIENT_SECRET')
 REDIRECT_URI = 'http://localhost:8000/integrations/hubspot/oauth2callback'
 authorization_url = f'https://app.hubspot.com/oauth/authorize?client_id={CLIENT_ID}&response_type=code&redirect_uri={REDIRECT_URI}&scope=crm.objects.contacts.read%20crm.objects.companies.read'
 
@@ -101,6 +102,7 @@ async def create_integration_item_metadata_object(response_json, item_type):
     )
 
 async def get_items_hubspot(credentials):
+    credentials = json.loads(credentials)
     access_token = credentials.get('access_token')
     if not access_token:
         raise HTTPException(status_code=400, detail='No access token in credentials.')
