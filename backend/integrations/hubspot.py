@@ -1,6 +1,7 @@
 # hubspot.py
 
 import json
+import os
 import secrets
 from fastapi import Request, HTTPException
 from fastapi.responses import HTMLResponse
@@ -11,8 +12,8 @@ import base64
 from redis_client import add_key_value_redis, get_value_redis, delete_key_redis
 from integrations.integration_item import IntegrationItem
 
-CLIENT_ID = 'b84ae56b-bd25-42ab-971b-9e7278c364e0'
-CLIENT_SECRET = '435333eb-c9e3-427e-b625-de0c33102a2a'
+CLIENT_ID = os.environ.get('HUBSPOT_CLIENT_ID')
+CLIENT_SECRET = os.environ.get('HUBSPOT_CLIENT_SECRET')
 REDIRECT_URI = 'http://localhost:8000/integrations/hubspot/oauth2callback'
 authorization_url = f'https://app.hubspot.com/oauth/authorize?client_id={CLIENT_ID}&response_type=code&redirect_uri={REDIRECT_URI}&scope=crm.objects.contacts.read%20crm.objects.companies.read'
 
