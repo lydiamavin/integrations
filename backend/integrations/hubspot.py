@@ -101,6 +101,33 @@ async def create_integration_item_metadata_object(response_json, item_type):
         last_modified_time=last_modified_time,
     )
 
+async def get_hubspot_account_info(access_token):
+    headers = {'Authorization': f'Bearer {access_token}'}
+    async with httpx.AsyncClient() as client:
+        response = await client.get('https://api.hubapi.com/account-info/v3/details', headers=headers)
+    if response.status_code == 200:
+        data = response.json()
+        return {
+            'portal_id': data.get('portalId'),
+            'account_name': data.get('accountName'),
+            'company_name': data.get('companyName'),
+        }
+    else:
+        raise HTTPException(status_code=response.status_code, detail='Failed to fetch account info')
+
+async def get_hubspot_user_info(access_token):
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f'https://api.hubapi.com/oauth/v1/access-tokens/{access_token}')
+    if response.status_code == 200:
+        data = response.json()
+        return {
+            'user_id': data.get('user_id'),
+            'user_email': data.get('user'),
+            'hub_id': data.get('hub_id'),
+        }
+    else:
+        raise HTTPException(status_code=response.status_code, detail='Failed to fetch user info')
+
 async def disconnect_hubspot(user_id, org_id):
     await delete_key_redis(f'hubspot_credentials:{org_id}:{user_id}')
     return {"message": "HubSpot disconnected successfully"}

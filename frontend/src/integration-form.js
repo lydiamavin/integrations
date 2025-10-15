@@ -24,34 +24,36 @@ export const IntegrationForm = () => {
 
   return (
     <Box display='flex' justifyContent='center' alignItems='center' flexDirection='column' sx={{ width: '100%' }}>
-        <Box display='flex' flexDirection='column'>
+        <Box display='flex' flexDirection='column' sx={{ width: '100%', maxWidth: 600 }}>
         <TextField
             label="User"
             value={user}
             onChange={(e) => setUser(e.target.value)}
             sx={{mt: 2}}
+            fullWidth
         />
         <TextField
             label="Organization"
             value={org}
             onChange={(e) => setOrg(e.target.value)}
             sx={{mt: 2}}
+            fullWidth
         />
         <Autocomplete
             id="integration-type"
             options={Object.keys(integrationMapping)}
-            sx={{ width: 300, mt: 2 }}
+            sx={{ width: '100%', mt: 2 }}
             renderInput={(params) => <TextField {...params} label="Integration Type" />}
             onChange={(e, value) => setCurrType(value)}
         />
         </Box>
-        {currType && 
-        <Box>
+        {currType &&
+        <Box sx={{mt: 3, width: '100%', maxWidth: 600}}>
             <CurrIntegration user={user} org={org} integrationParams={integrationParams} setIntegrationParams={setIntegrationParams} />
         </Box>
         }
-        {integrationParams?.credentials && 
-        <Box sx={{mt: 2}}>
+        {integrationParams?.credentials &&
+        <Box sx={{mt: 3, width: '100%', maxWidth: 600}}>
             <DataForm integrationType={integrationParams?.type} credentials={integrationParams?.credentials} />
         </Box>
         }
