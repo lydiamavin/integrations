@@ -3,6 +3,10 @@ import {
     Box,
     TextField,
     Button,
+    Typography,
+    List,
+    ListItem,
+    ListItemText,
 } from '@mui/material';
 import axios from 'axios';
 
@@ -31,13 +35,23 @@ export const DataForm = ({ integrationType, credentials }) => {
     return (
         <Box display='flex' justifyContent='center' alignItems='center' flexDirection='column' width='100%'>
             <Box display='flex' flexDirection='column' width='100%'>
-                <TextField
-                    label="Loaded Data"
-                    value={loadedData || ''}
-                    sx={{mt: 2}}
-                    InputLabelProps={{ shrink: true }}
-                    disabled
-                />
+                {loadedData ? (
+                    <Box sx={{mt: 2}}>
+                        <Typography variant="h6">Loaded Data:</Typography>
+                        <List>
+                            {loadedData.map((item, index) => (
+                                <ListItem key={index} sx={{border: '1px solid #ddd', mb: 1, borderRadius: 1}}>
+                                    <ListItemText
+                                        primary={`Name: ${item.name}`}
+                                        secondary={`Type: ${item.type} | ID: ${item.id} | Created: ${item.creation_time ? new Date(item.creation_time).toLocaleString() : 'N/A'}`}
+                                    />
+                                </ListItem>
+                            ))}
+                        </List>
+                    </Box>
+                ) : (
+                    <Typography sx={{mt: 2}}>No data loaded yet.</Typography>
+                )}
                 <Button
                     onClick={handleLoad}
                     sx={{mt: 2}}

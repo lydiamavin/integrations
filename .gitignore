@@ -42,8 +42,8 @@ yarn-error.log*
 *.log
 logs/
 
-# Redis (uncomment if you want to ignore dump.rdb)
-# dump.rdb
+# Redis
+dump.rdb
 
 # Environment variables
 .env

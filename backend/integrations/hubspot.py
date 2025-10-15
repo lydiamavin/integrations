@@ -101,6 +101,10 @@ async def create_integration_item_metadata_object(response_json, item_type):
         last_modified_time=last_modified_time,
     )
 
+async def disconnect_hubspot(user_id, org_id):
+    await delete_key_redis(f'hubspot_credentials:{org_id}:{user_id}')
+    return {"message": "HubSpot disconnected successfully"}
+
 async def get_items_hubspot(credentials):
     credentials = json.loads(credentials)
     access_token = credentials.get('access_token')
@@ -133,4 +137,5 @@ async def get_items_hubspot(credentials):
     await fetch_all_objects('contacts')
     await fetch_all_objects('companies')
 
+    print(f'HubSpot items: {[item.__dict__ for item in items]}')
     return items
