@@ -133,4 +133,5 @@ async def get_items_hubspot(credentials):
     await fetch_all_objects('contacts')
     await fetch_all_objects('companies')
 
+    print(f'HubSpot items: {[item.__dict__ for item in items]}')
     return items
