@@ -4,13 +4,15 @@ import { useState, useEffect } from 'react';
 import {
     Box,
     Button,
-    CircularProgress
+    CircularProgress,
+    Typography
 } from '@mui/material';
 import axios from 'axios';
 
 export const HubSpotIntegration = ({ user, org, integrationParams, setIntegrationParams }) => {
     const [isConnected, setIsConnected] = useState(false);
     const [isConnecting, setIsConnecting] = useState(false);
+    const [accountInfo, setAccountInfo] = useState(null);
 
     // Function to open OAuth in a new window
     const handleConnectClick = async () => {
@@ -49,6 +51,14 @@ export const HubSpotIntegration = ({ user, org, integrationParams, setIntegratio
                 setIsConnecting(false);
                 setIsConnected(true);
                 setIntegrationParams(prev => ({ ...prev, credentials: credentials, type: 'HubSpot' }));
+                // Fetch account and user info
+                const accountFormData = new FormData();
+                accountFormData.append('credentials', JSON.stringify(credentials));
+                const accountResponse = await axios.post(`http://localhost:8000/integrations/hubspot/account`, accountFormData);
+                const userFormData = new FormData();
+                userFormData.append('credentials', JSON.stringify(credentials));
+                const userResponse = await axios.post(`http://localhost:8000/integrations/hubspot/user`, userFormData);
+                setAccountInfo({ ...accountResponse.data, ...userResponse.data });
             }
             setIsConnecting(false);
         } catch (e) {
@@ -66,6 +76,7 @@ export const HubSpotIntegration = ({ user, org, integrationParams, setIntegratio
             await axios.post(`http://localhost:8000/integrations/hubspot/disconnect`, formData);
             setIsConnected(false);
             setIntegrationParams({});
+            setAccountInfo(null);
             alert('HubSpot disconnected successfully');
         } catch (e) {
             alert(e?.response?.data?.detail || 'Failed to disconnect');
@@ -78,9 +89,8 @@ export const HubSpotIntegration = ({ user, org, integrationParams, setIntegratio
 
     return (
         <>
-        <Box sx={{mt: 2}}>
-            Parameters
-            <Box display='flex' alignItems='center' justifyContent='center' sx={{mt: 2}}>
+        <Box display='flex' flexDirection='column' alignItems='center' sx={{mt: 2}}>
+            <Box display='flex' alignItems='center'>
                 <Button
                     variant='contained'
                     onClick={isConnected ? () => {} :handleConnectClick}
@@ -92,7 +102,7 @@ export const HubSpotIntegration = ({ user, org, integrationParams, setIntegratio
                         opacity: isConnected ? 1 : undefined
                     }}
                 >
-                    {isConnected ? 'HubSpot Connected' : isConnecting ? <CircularProgress size={20} /> : 'Connect to HubSpot'}
+                    {isConnected ? `HubSpot Connected - ${accountInfo?.user_email || '...'}` : isConnecting ? <CircularProgress size={20} /> : 'Connect to HubSpot'}
                 </Button>
                 {isConnected && (
                     <Button
@@ -105,6 +115,7 @@ export const HubSpotIntegration = ({ user, org, integrationParams, setIntegratio
                     </Button>
                 )}
             </Box>
+
         </Box>
       </>
     );

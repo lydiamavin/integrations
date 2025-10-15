@@ -7,6 +7,7 @@ import {
     List,
     ListItem,
     ListItemText,
+    CircularProgress,
 } from '@mui/material';
 import axios from 'axios';
 
@@ -18,9 +19,11 @@ const endpointMapping = {
 
 export const DataForm = ({ integrationType, credentials }) => {
     const [loadedData, setLoadedData] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
     const endpoint = endpointMapping[integrationType];
 
     const handleLoad = async () => {
+        setIsLoading(true);
         try {
             const formData = new FormData();
             formData.append('credentials', JSON.stringify(credentials));
@@ -29,6 +32,8 @@ export const DataForm = ({ integrationType, credentials }) => {
             setLoadedData(data);
         } catch (e) {
             alert(e?.response?.data?.detail);
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -37,13 +42,13 @@ export const DataForm = ({ integrationType, credentials }) => {
             <Box display='flex' flexDirection='column' width='100%'>
                 {loadedData ? (
                     <Box sx={{mt: 2}}>
-                        <Typography variant="h6">Loaded Data:</Typography>
+                        <Typography variant="h6">Loaded Data ({loadedData.length} items):</Typography>
                         <List>
                             {loadedData.map((item, index) => (
                                 <ListItem key={index} sx={{border: '1px solid #ddd', mb: 1, borderRadius: 1}}>
                                     <ListItemText
                                         primary={`Name: ${item.name}`}
-                                        secondary={`Type: ${item.type} | ID: ${item.id} | Created: ${item.creation_time ? new Date(item.creation_time).toLocaleString() : 'N/A'}`}
+                                        secondary={`Type: ${item.type} | ID: ${item.id} | Created: ${item.creation_time ? new Date(item.creation_time).toLocaleString() : 'N/A'} | Modified: ${item.last_modified_time ? new Date(item.last_modified_time).toLocaleString() : 'N/A'}`}
                                     />
                                 </ListItem>
                             ))}
@@ -56,8 +61,9 @@ export const DataForm = ({ integrationType, credentials }) => {
                     onClick={handleLoad}
                     sx={{mt: 2}}
                     variant='contained'
+                    disabled={isLoading}
                 >
-                    Load Data
+                    {isLoading ? <CircularProgress size={20} /> : 'Load Data'}
                 </Button>
                 <Button
                     onClick={() => setLoadedData(null)}

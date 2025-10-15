@@ -3,12 +3,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+import json
 from fastapi import FastAPI, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from integrations.airtable import authorize_airtable, get_items_airtable, oauth2callback_airtable, get_airtable_credentials
 from integrations.notion import authorize_notion, get_items_notion, oauth2callback_notion, get_notion_credentials
-from integrations.hubspot import authorize_hubspot, get_hubspot_credentials, get_items_hubspot, oauth2callback_hubspot, disconnect_hubspot
+from integrations.hubspot import authorize_hubspot, get_hubspot_credentials, get_items_hubspot, oauth2callback_hubspot, disconnect_hubspot, get_hubspot_account_info, get_hubspot_user_info
 
 app = FastAPI()
 
@@ -80,6 +81,18 @@ async def get_hubspot_credentials_integration(user_id: str = Form(...), org_id: 
 @app.post('/integrations/hubspot/disconnect')
 async def disconnect_hubspot_integration(user_id: str = Form(...), org_id: str = Form(...)):
     return await disconnect_hubspot(user_id, org_id)
+
+@app.post('/integrations/hubspot/account')
+async def get_hubspot_account_integration(credentials: str = Form(...)):
+    credentials = json.loads(credentials)
+    access_token = credentials.get('access_token')
+    return await get_hubspot_account_info(access_token)
+
+@app.post('/integrations/hubspot/user')
+async def get_hubspot_user_integration(credentials: str = Form(...)):
+    credentials = json.loads(credentials)
+    access_token = credentials.get('access_token')
+    return await get_hubspot_user_info(access_token)
 
 @app.post('/integrations/hubspot/load')
 async def get_hubspot_items(credentials: str = Form(...)):
