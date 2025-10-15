@@ -43,6 +43,7 @@ export const IntegrationForm = () => {
             id="integration-type"
             options={Object.keys(integrationMapping)}
             sx={{ width: '100%', mt: 2 }}
+            disabled={!!integrationParams?.credentials}
             renderInput={(params) => <TextField {...params} label="Integration Type" />}
             onChange={(e, value) => setCurrType(value)}
         />
