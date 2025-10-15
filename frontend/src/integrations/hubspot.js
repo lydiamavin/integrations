@@ -57,6 +57,21 @@ export const HubSpotIntegration = ({ user, org, integrationParams, setIntegratio
         }
     }
 
+    // Function to disconnect HubSpot
+    const handleDisconnect = async () => {
+        try {
+            const formData = new FormData();
+            formData.append('user_id', user);
+            formData.append('org_id', org);
+            await axios.post(`http://localhost:8000/integrations/hubspot/disconnect`, formData);
+            setIsConnected(false);
+            setIntegrationParams({});
+            alert('HubSpot disconnected successfully');
+        } catch (e) {
+            alert(e?.response?.data?.detail || 'Failed to disconnect');
+        }
+    }
+
     useEffect(() => {
         setIsConnected(integrationParams?.credentials ? true : false)
     }, []);
@@ -79,6 +94,16 @@ export const HubSpotIntegration = ({ user, org, integrationParams, setIntegratio
                 >
                     {isConnected ? 'HubSpot Connected' : isConnecting ? <CircularProgress size={20} /> : 'Connect to HubSpot'}
                 </Button>
+                {isConnected && (
+                    <Button
+                        variant='outlined'
+                        color='error'
+                        onClick={handleDisconnect}
+                        sx={{ml: 2}}
+                    >
+                        Disconnect
+                    </Button>
+                )}
             </Box>
         </Box>
       </>
