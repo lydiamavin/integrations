@@ -9,6 +9,7 @@ import asyncio
 import base64
 
 from redis_client import add_key_value_redis, get_value_redis, delete_key_redis
+from integration_item import IntegrationItem
 
 CLIENT_ID = 'b84ae56b-bd25-42ab-971b-9e7278c364e0'
 CLIENT_SECRET = '435333eb-c9e3-427e-b625-de0c33102a2a'
@@ -32,6 +33,8 @@ async def oauth2callback_hubspot(request: Request):
         raise HTTPException(status_code=400, detail=request.query_params.get('error_description'))
     code = request.query_params.get('code')
     encoded_state = request.query_params.get('state')
+    if not encoded_state:
+        raise HTTPException(status_code=400, detail='Missing state parameter.')
     state_data = json.loads(base64.urlsafe_b64decode(encoded_state).decode('utf-8'))
 
     original_state = state_data.get('state')
@@ -78,10 +81,54 @@ async def get_hubspot_credentials(user_id, org_id):
 
     return credentials
 
-async def create_integration_item_metadata_object(response_json):
-    # TODO
-    pass
+async def create_integration_item_metadata_object(response_json, item_type):
+    from datetime import datetime
+    properties = response_json.get('properties', {})
+    name = properties.get('name') or properties.get('firstname', '') + ' ' + properties.get('lastname', '').strip() or f"{item_type.capitalize()} {response_json['id']}"
+    creation_time = properties.get('createdate')
+    if creation_time:
+        creation_time = datetime.fromisoformat(creation_time.replace('Z', '+00:00'))
+    last_modified_time = properties.get('lastmodifieddate')
+    if last_modified_time:
+        last_modified_time = datetime.fromisoformat(last_modified_time.replace('Z', '+00:00'))
+
+    return IntegrationItem(
+        id=response_json['id'],
+        name=name,
+        type=item_type,
+        creation_time=creation_time,
+        last_modified_time=last_modified_time,
+    )
 
 async def get_items_hubspot(credentials):
-    # TODO
-    pass
+    access_token = credentials.get('access_token')
+    if not access_token:
+        raise HTTPException(status_code=400, detail='No access token in credentials.')
+
+    headers = {'Authorization': f'Bearer {access_token}'}
+    items = []
+
+    async def fetch_all_objects(object_type):
+        url = f'https://api.hubapi.com/crm/v3/objects/{object_type}'
+        after = None
+        while True:
+            params = {}
+            if after:
+                params['after'] = after
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, headers=headers, params=params)
+            if response.status_code != 200:
+                raise HTTPException(status_code=response.status_code, detail=f'Failed to fetch {object_type}: {response.text}')
+            data = response.json()
+            for obj in data.get('results', []):
+                items.append(await create_integration_item_metadata_object(obj, object_type))
+            paging = data.get('paging')
+            if paging and 'next' in paging:
+                after = paging['next']['after']
+            else:
+                break
+
+    await fetch_all_objects('contacts')
+    await fetch_all_objects('companies')
+
+    return items
