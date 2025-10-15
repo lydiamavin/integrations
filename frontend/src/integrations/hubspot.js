@@ -5,7 +5,8 @@ import {
     Box,
     Button,
     CircularProgress,
-    Typography
+    Typography,
+    Snackbar
 } from '@mui/material';
 import axios from 'axios';
 
@@ -13,6 +14,7 @@ export const HubSpotIntegration = ({ user, org, integrationParams, setIntegratio
     const [isConnected, setIsConnected] = useState(false);
     const [isConnecting, setIsConnecting] = useState(false);
     const [accountInfo, setAccountInfo] = useState(null);
+    const [snackbar, setSnackbar] = useState({ open: false, message: '' });
 
     // Function to open OAuth in a new window
     const handleConnectClick = async () => {
@@ -35,7 +37,7 @@ export const HubSpotIntegration = ({ user, org, integrationParams, setIntegratio
             }, 200);
         } catch (e) {
             setIsConnecting(false);
-            alert(e?.response?.data?.detail);
+            setSnackbar({ open: true, message: e?.response?.data?.detail || 'Connection failed' });
         }
     }
 
@@ -63,7 +65,7 @@ export const HubSpotIntegration = ({ user, org, integrationParams, setIntegratio
             setIsConnecting(false);
         } catch (e) {
             setIsConnecting(false);
-            alert(e?.response?.data?.detail);
+            setSnackbar({ open: true, message: e?.response?.data?.detail || 'Connection failed' });
         }
     }
 
@@ -77,9 +79,9 @@ export const HubSpotIntegration = ({ user, org, integrationParams, setIntegratio
             setIsConnected(false);
             setIntegrationParams({});
             setAccountInfo(null);
-            alert('HubSpot disconnected successfully');
+            setSnackbar({ open: true, message: 'HubSpot disconnected successfully' });
         } catch (e) {
-            alert(e?.response?.data?.detail || 'Failed to disconnect');
+            setSnackbar({ open: true, message: e?.response?.data?.detail || 'Failed to disconnect' });
         }
     }
 
@@ -117,6 +119,12 @@ export const HubSpotIntegration = ({ user, org, integrationParams, setIntegratio
             </Box>
 
         </Box>
+        <Snackbar
+            open={snackbar.open}
+            onClose={() => setSnackbar({ open: false, message: '' })}
+            message={snackbar.message}
+            autoHideDuration={4000}
+        />
       </>
     );
 }
